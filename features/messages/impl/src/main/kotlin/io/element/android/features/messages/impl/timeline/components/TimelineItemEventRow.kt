@@ -74,6 +74,7 @@ import io.element.android.features.messages.impl.timeline.TimelineEvent
 import io.element.android.features.messages.impl.timeline.TimelineRoomInfo
 import io.element.android.features.messages.impl.timeline.aTimelineItemEvent
 import io.element.android.features.messages.impl.timeline.components.event.TimelineItemEventContentView
+import io.element.android.features.messages.impl.timeline.mtrix.MtrixEventContent
 import io.element.android.features.messages.impl.timeline.components.receipt.ReadReceiptViewState
 import io.element.android.features.messages.impl.timeline.components.receipt.TimelineItemReadReceiptView
 import io.element.android.features.messages.impl.timeline.model.TimelineItem
@@ -867,7 +868,7 @@ private fun MessageEventBubbleContent(
                     traversalIndex = -1f
                 },
                 content = { onContentLayoutChange ->
-                    eventContentView(contentModifier, onContentLayoutChange)
+                    MtrixEventContent(event, eventSink, onContentLayoutChange, contentModifier, eventContentView) // mtrix fork
                 }
             )
         }

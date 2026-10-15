@@ -21,6 +21,7 @@ import io.element.android.features.messages.impl.timeline.model.TimelineItemGrou
 import io.element.android.features.messages.impl.timeline.model.TimelineItemReactions
 import io.element.android.features.messages.impl.timeline.model.TimelineItemReadReceipts
 import io.element.android.features.messages.impl.timeline.model.TimelineItemThreadInfo
+import io.element.android.features.messages.impl.timeline.mtrix.mtrixPayload
 import io.element.android.features.messages.impl.utils.messagesummary.MessageSummaryFormatter
 import io.element.android.libraries.core.bool.orTrue
 import io.element.android.libraries.dateformatter.api.DateFormatter
@@ -133,6 +134,7 @@ class TimelineItemEventFactory(
             sendHandleProvider = currentTimelineItem.event.sendHandleProvider,
             forwarder = currentTimelineItem.event.forwarder,
             forwarderProfile = currentTimelineItem.event.forwarderProfile,
+            mtrix = currentTimelineItem.event.mtrixPayload(),
         )
     }
 
