@@ -5,12 +5,19 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+import extension.testCommonDependencies
+
 plugins {
     id("io.element.android-compose-library")
 }
 
 android {
     namespace = "io.element.android.features.mtrix"
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
 }
 
 dependencies {
@@ -18,6 +25,5 @@ dependencies {
     implementation(projects.libraries.matrix.api)
     implementation(libs.serialization.json)
 
-    testImplementation(libs.test.junit)
-    testImplementation(libs.test.truth)
+    testCommonDependencies(libs, includeTestComposeView = true)
 }
