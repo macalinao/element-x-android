@@ -152,7 +152,8 @@ private fun Grid(columns: Int, cells: List<CellSpec>) {
 
 /** Sorting and alignment rules from the spec, kept pure for tests. */
 object MtrixTableSort {
-    private val numberLike = Regex("^[^\\d\\-+.]*([-+]?[\\d,]*\\.?\\d+)\\s*%?[^\\d]*$")
+    // An optional currency code ("PHP ") or symbol ("₱"), the number, an optional "%". Not "RK84" or "item 9".
+    private val numberLike = Regex("^(?:[A-Z]{2,4}\\s+)?[^\\p{L}\\d\\s+.-]*\\s*([-+]?(?:\\d[\\d,]*(?:\\.\\d+)?|\\.\\d+))\\s*%?$")
 
     /** A cell read as a number: numbers, and strings like `1,234`, `₱1,200`, `12.5%`, `PHP 99`. */
     fun numeric(v: MtrixCell): Double? = when (v) {
