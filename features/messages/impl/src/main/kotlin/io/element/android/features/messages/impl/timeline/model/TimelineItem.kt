@@ -105,6 +105,8 @@ sealed interface TimelineItem {
         val forwarder: UserId?,
         /** If [forwarder] is set, the profile of the forwarding user, if it was cached at the time the `EventTimelineItem` was created. */
         val forwarderProfile: ProfileDetails?,
+        /** mtrix fork: the parsed `com.ianm.mtrix` payload, for allow-listed senders only. */
+        val mtrix: io.element.android.features.mtrix.MtrixPayload? = null,
     ) : TimelineItem {
         val showSenderInformation = groupPosition.isNew() && !isMine
 

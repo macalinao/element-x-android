@@ -67,6 +67,9 @@ sealed interface TimelineEvent {
 
     data object StopLiveLocationShare : TimelineItemEvent
 
+    /** mtrix fork: a `com.ianm.mtrix` button or chip was tapped (see features/mtrix). */
+    data class MtrixButtonTapped(val eventId: EventId, val action: io.element.android.features.mtrix.MtrixAction) : TimelineItemEvent
+
     data class ValidateMedia(
         val eventId: EventId,
         val mediaSources: List<MediaSource>,

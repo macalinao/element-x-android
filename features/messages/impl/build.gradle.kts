@@ -29,6 +29,7 @@ dependencies {
     api(projects.features.messages.api)
     implementation(projects.appconfig)
     implementation(projects.features.call.api)
+    implementation(projects.features.mtrix) // mtrix fork
     implementation(projects.features.enterprise.api)
     implementation(projects.features.forward.api)
     implementation(projects.features.location.api)

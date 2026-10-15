@@ -36,6 +36,7 @@ import io.element.android.features.messages.impl.timeline.model.TimelineItem
 import io.element.android.features.messages.impl.timeline.model.virtual.TimelineItemReadMarkerModel
 import io.element.android.features.messages.impl.timeline.model.virtual.TimelineItemTypingNotificationModel
 import io.element.android.features.messages.impl.timeline.protection.TimelineProtectionEvent
+import io.element.android.features.mtrix.MtrixActionPerformer
 import io.element.android.features.messages.impl.timeline.protection.TimelineProtectionState
 import io.element.android.features.messages.impl.timeline.sendfailure.SendFailureDialogState
 import io.element.android.features.messages.impl.typing.TypingNotificationState
@@ -222,6 +223,9 @@ class TimelinePresenter(
                             pollStartId = event.pollStartId,
                         )
                     }
+                }
+                is TimelineEvent.MtrixButtonTapped -> sessionCoroutineScope.launch {
+                    timelineController.invokeOnCurrentTimeline { MtrixActionPerformer.perform(this, event.eventId, event.action) }
                 }
                 is TimelineEvent.EditPoll -> {
                     navigator.navigateToEditPoll(event.pollStartId)
