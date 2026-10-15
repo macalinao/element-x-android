@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -78,6 +79,9 @@ fun MtrixBlocksView(
     // Sends tapped in this session: a send button has no timeline-derived state here, and this also
     // absorbs double taps before the reaction's local echo shows up.
     var tapped by rememberSaveable { mutableStateOf(emptyList<String>()) }
+    // Once the timeline reflects the user's reactions, it is the source of truth again for react buttons
+    // (so removing the reaction through the reaction pill un-selects the button).
+    LaunchedEffect(interactions.mine) { tapped = tapped.filterNot { it.startsWith("r:") } }
     fun isSelected(action: MtrixAction): Boolean = when (action) {
         is MtrixAction.React -> action.key in interactions.mine || "r:${action.key}" in tapped
         is MtrixAction.Send -> "s:${action.body}" in tapped
