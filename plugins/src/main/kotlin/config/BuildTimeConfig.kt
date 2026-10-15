@@ -9,8 +9,8 @@
 package config
 
 object BuildTimeConfig {
-    const val APPLICATION_ID = "io.element.android.x"
-    const val APPLICATION_NAME = "Element X"
+    const val APPLICATION_ID = "io.element.android.x.mtrix" // mtrix fork: installs alongside official Element X
+    const val APPLICATION_NAME = "Element X mtrix" // mtrix fork
     val METADATA_HOST_REVERSED: String? = null
     val OAUTH_CLIENT_URL_PATH: String? = "apps/android"
     val URL_WEBSITE: String? = null
