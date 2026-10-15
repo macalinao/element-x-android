@@ -112,3 +112,6 @@ lint/tmp/
 .DS_Store
 
 checkouts/**
+
+# mtrix fork: built APKs
+/dist/
