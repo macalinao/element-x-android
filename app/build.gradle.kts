@@ -96,7 +96,17 @@ android {
             storePassword = System.getenv("ELEMENT_ANDROID_NIGHTLY_STOREPASSWORD")
                 ?: project.property("signing.element.nightly.storePassword") as? String?
         }
+        // mtrix fork: self-managed key outside the repo (README.mtrix.md), from env or ~/.gradle/gradle.properties.
+        mtrixSigningProperty("storeFile")?.let { storePath ->
+            register("mtrix") {
+                storeFile = file(storePath)
+                storePassword = mtrixSigningProperty("storePassword")
+                keyAlias = mtrixSigningProperty("keyAlias")
+                keyPassword = mtrixSigningProperty("keyPassword")
+            }
+        }
     }
+    val mtrixSigning = signingConfigs.findByName("mtrix") // mtrix fork
 
     val baseAppName = BuildTimeConfig.APPLICATION_NAME
     val buildType = if (isEnterpriseBuild) "Enterprise" else "FOSS"
@@ -112,7 +122,7 @@ android {
                 "$oAuthRedirectSchemeBase.debug",
             )
             applicationIdSuffix = ".debug"
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = mtrixSigning ?: signingConfigs.getByName("debug")
         }
 
         getByName("release") {
@@ -122,7 +132,7 @@ android {
                 "login_redirect_scheme",
                 oAuthRedirectSchemeBase,
             )
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = mtrixSigning ?: signingConfigs.getByName("debug")
 
             optimization {
                 enable = true
@@ -376,3 +386,8 @@ configurations.all {
         }
     }
 }
+
+// mtrix fork: MTRIX_SIGNING_STORE_FILE etc. in the environment, else mtrix.signing.storeFile etc. as Gradle properties.
+fun mtrixSigningProperty(name: String): String? =
+    System.getenv("MTRIX_SIGNING_" + name.replace(Regex("([A-Z])"), "_$1").uppercase())
+        ?: providers.gradleProperty("mtrix.signing.$name").orNull
