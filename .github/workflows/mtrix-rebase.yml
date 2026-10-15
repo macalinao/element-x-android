@@ -1,0 +1,97 @@
+# mtrix fork: weekly rebase of the mtrix patch set onto the latest upstream release.
+# Needs no secrets (only the default GITHUB_TOKEN). On success it pushes the rebased, tested, built branch to
+# `mtrix-next` and opens an issue; on conflict it opens an issue. It never rewrites `mtrix` itself.
+# Actions are disabled on forks by default: enable them in the fork's Actions tab. See README.mtrix.md.
+name: mtrix rebase onto upstream
+
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Upstream tag to rebase onto (default: latest vX.Y.Z)"
+        required: false
+      build:
+        description: "Build the APK (unsigned debug key) after rebasing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: mtrix-rebase
+  cancel-in-progress: false
+
+jobs:
+  rebase:
+    if: github.repository_owner == 'macalinao'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: mtrix
+          fetch-depth: 0
+          lfs: false
+
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+
+      - name: Rebase
+        id: rebase
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          git config user.name "mtrix-bot"
+          git config user.email "mtrix-bot@users.noreply.github.com"
+          git remote add upstream https://github.com/element-hq/element-x-android.git
+          git fetch --quiet --tags upstream
+          TAG="${INPUT_TAG:-$(git tag -l 'v[0-9]*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          BASE="$(git describe --tags --abbrev=0 --match 'v[0-9]*' HEAD)"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          if [ "$BASE" = "$TAG" ]; then echo "status=uptodate" >> "$GITHUB_OUTPUT"; exit 0; fi
+          set +e
+          scripts/rebase-upstream.sh --no-build --tag "$TAG" > rebase.log 2>&1
+          code=$?
+          set -e
+          cat rebase.log
+          if [ "$code" = 2 ]; then echo "status=conflict" >> "$GITHUB_OUTPUT"; exit 0; fi
+          [ "$code" = 0 ] || exit "$code"
+          echo "status=rebased" >> "$GITHUB_OUTPUT"
+
+      - name: Test and build
+        if: steps.rebase.outputs.status == 'rebased' && (github.event_name == 'schedule' || inputs.build)
+        run: nix develop -c ./gradlew --console=plain --no-configuration-cache :features:mtrix:testDebugUnitTest :app:assembleFdroidDebug
+
+      - name: Push mtrix-next
+        if: steps.rebase.outputs.status == 'rebased'
+        run: git push --force origin HEAD:refs/heads/mtrix-next
+
+      - name: Report
+        if: steps.rebase.outputs.status == 'rebased' || steps.rebase.outputs.status == 'conflict'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATUS: ${{ steps.rebase.outputs.status }}
+          TAG: ${{ steps.rebase.outputs.tag }}
+          BASE: ${{ steps.rebase.outputs.base }}
+        run: |
+          if [ "$STATUS" = rebased ]; then
+            title="mtrix: rebased onto $TAG"
+            body="The mtrix patch set rebased cleanly from $BASE onto $TAG and the tests/build passed. It is on \`mtrix-next\`.
+
+          To adopt it: \`git fetch origin && git push --force-with-lease origin origin/mtrix-next:mtrix\`, or run \`scripts/rebase-upstream.sh --push\` locally (builds the signed APK too)."
+          else
+            title="mtrix: rebase onto $TAG has conflicts"
+            body="Rebasing mtrix from $BASE onto $TAG conflicts. Run \`scripts/rebase-upstream.sh --tag $TAG\` locally and resolve.
+
+          \`\`\`
+          $(tail -n 40 rebase.log)
+          \`\`\`"
+          fi
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$body" || echo "could not open an issue (are issues enabled on the fork?)"
